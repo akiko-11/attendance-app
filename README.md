@@ -120,7 +120,7 @@ MAIL_PORT=1025
 
 停止する場合は、実行中のターミナルで `Ctrl + C` を押します。
 
-### 9. アクセス
+### 9. アクセス（URL）
 
 ブラウザで以下へアクセスします。
 
@@ -192,10 +192,96 @@ platform: 'linux/amd64'
 
 ## ER図
 
-後程で記載予定
+```mermaid
+erDiagram
+    users ||--o{ attendance_records : has
+    users ||--o{ attendance_correction_requests : submits
+    attendance_records ||--o{ attendance_breaks : has
+    attendance_records ||--o{ attendance_correction_requests : has
+    attendance_correction_requests ||--o{ proposal_breaks : has
 
-## URL
+    users {
+        bigint id PK
+        varchar name
+        varchar email
+        timestamp email_verified_at
+        varchar password
+        boolean admin_status
+        varchar remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
 
-* 開発環境：`http://localhost`
-* phpMyAdmin：`http://localhost:8080`
-* Mailpit：`http://localhost:8025`
+    attendance_records {
+        bigint id PK
+        bigint user_id FK
+        date date
+        time clock_in
+        time clock_out "nullable"
+        text comment "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    attendance_breaks {
+        bigint id PK
+        bigint attendance_record_id FK
+        time break_in
+        time break_out "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    attendance_correction_requests {
+        bigint id PK
+        bigint user_id FK
+        bigint attendance_record_id FK
+        date new_date
+        time new_clock_in
+        time new_clock_out "nullable"
+        text comment
+        boolean approval_status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    proposal_breaks {
+        bigint id PK
+        bigint attendance_correction_request_id FK
+        time break_in
+        time break_out "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+### 制約
+
+- `users.email` は一意
+- `attendance_records` は `(user_id, date)` の組み合わせで一意
+- `attendance_correction_requests.comment` は NULL 不可
+
+### リレーション
+
+- 1人のユーザーには、複数の勤怠情報および修正申請が紐づきます。
+- 1件の勤怠情報には、複数の休憩情報および修正申請が紐づきます。
+- 1件の修正申請には、複数の修正後休憩情報が紐づきます。
+
+### 外部キー
+
+- `attendance_records.user_id` → `users.id`
+- `attendance_breaks.attendance_record_id` → `attendance_records.id`
+- `attendance_correction_requests.user_id` → `users.id`
+- `attendance_correction_requests.attendance_record_id` → `attendance_records.id`
+- `proposal_breaks.attendance_correction_request_id` → `attendance_correction_requests.id`
+
+上記の外部キーには ON DELETE CASCADE を設定しています。
+
+
+## ログイン情報
+
+| 権限 | メールアドレス | パスワード |
+| --- | --- | --- |
+| 一般ユーザー | user1@example.com | password |
+| 一般ユーザー | user2@example.com | password |
+| 管理者 | user3@example.com | password |
