@@ -117,8 +117,6 @@ return [
 
     'limiters' => [
         'login' => 'login',
-        // 二要素認証を使用しないため無効化
-        // 'two-factor' => 'two-factor',
     ],
 
     /*
@@ -147,24 +145,6 @@ return [
 
     'features' => [
         Features::registration(),
-
-        // 本アプリではパスワードリセット機能を使用しないため無効化
-        // Features::resetPasswords(),
-
-        Features::emailVerification(),
-
-        // 本アプリではプロフィール更新機能を使用しないため無効化
-        // Features::updateProfileInformation(),
-
-        // 本アプリではパスワード更新機能を使用しないため無効化
-        // Features::updatePasswords(),
-
-        // 本アプリでは二要素認証を使用しないため無効化
-        // Features::twoFactorAuthentication([
-        //     'confirm' => true,
-        //     'confirmPassword' => true,
-        //     // 'window' => 0,
-        // ]),
     ],
 
 ];
