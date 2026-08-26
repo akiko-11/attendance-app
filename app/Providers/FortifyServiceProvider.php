@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Http\Requests\Auth\LoginRequest as AppLoginRequest;
+use App\Http\Responses\LoginResponse as AppLoginResponse;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Http\Requests\LoginRequest as FortifyLoginRequest;
 
@@ -24,6 +26,11 @@ class FortifyServiceProvider extends ServiceProvider
         $this->app->bind(
             FortifyLoginRequest::class,
             AppLoginRequest::class
+        );
+
+        $this->app->singleton(
+            LoginResponseContract::class,
+            AppLoginResponse::class
         );
     }
 
@@ -50,15 +57,14 @@ class FortifyServiceProvider extends ServiceProvider
             return view('user.register');
         });
 
-        // メール認証機能は応用で実装予定
-        // Fortify::verifyEmailView(function () {
-        //     return view('auth.verify-email');
-        // });
-
-        // 一般ユーザー認証
+        // ユーザー認証
         Fortify::authenticateUsing(function (Request $request) {
+
+            // 管理者ログインURLか判定
+            $adminStatus = $request->is('admin/login');
+
             $user = User::where('email', $request->email)
-                ->where('admin_status', false)
+                ->where('admin_status', $adminStatus)
                 ->first();
 
             if ($user && Hash::check($request->password, $user->password)) {
