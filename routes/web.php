@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
@@ -10,4 +11,8 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/admin/login', [AuthenticatedSessionController::class, 'store'])
         ->name('admin.login.store');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/attendance', [AttendanceController::class, 'index']);
 });
