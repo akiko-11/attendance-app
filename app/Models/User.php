@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -48,6 +47,31 @@ class User extends Authenticatable
     public function attendanceRecords(): HasMany
     {
         return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function getAttendanceStatusAttribute(): string
+    {
+        $attendance = $this->attendanceRecords()
+            ->whereDate('date', today())
+            ->first();
+
+        if (! $attendance) {
+            return '勤務外';
+        }
+
+        if ($attendance->clock_out !== null) {
+            return '退勤済';
+        }
+
+        $isOnBreak = $attendance->breaks()
+            ->whereNull('break_out')
+            ->exists();
+
+        if ($isOnBreak) {
+            return '休憩中';
+        }
+
+        return '出勤中';
     }
 
     public function attendanceCorrectionRequests(): HasMany
