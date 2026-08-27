@@ -105,7 +105,7 @@ class AttendanceScreenTest extends TestCase
     // 退勤済の場合、勤怠ステータスが正しく表示される
     public function test_attendance_status_is_clocked_out(): void
     {
-        Carbon::setTestNow('2026-08-26 19:00:00');
+        Carbon::setTestNow('2026-08-26 18:00:00');
 
         $user = User::factory()->create([
             'admin_status' => false,
@@ -123,6 +123,30 @@ class AttendanceScreenTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('退勤済');
         $response->assertSee('お疲れ様でした。');
+
+        Carbon::setTestNow();
+    }
+
+    // 退勤済のユーザーでは「出勤」ボタンが表示されない
+    public function test_clock_in_button_is_not_displayed_when_clocked_out(): void
+    {
+        Carbon::setTestNow('2026-08-26 18:00:00');
+
+        $user = User::factory()->create([
+            'admin_status' => false,
+        ]);
+
+        AttendanceRecord::factory()->create([
+            'user_id' => $user->id,
+            'date' => '2026-08-26',
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $response = $this->actingAs($user)->get('/attendance');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('value="clock_in"', false);
 
         Carbon::setTestNow();
     }
