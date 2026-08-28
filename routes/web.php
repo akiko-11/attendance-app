@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AttendanceCorrectionRequestController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
@@ -19,4 +20,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance', [AttendanceController::class, 'store']);
 
     Route::get('/attendance/list', [AttendanceController::class, 'list']);
+
+    Route::get('/stamp_correction_request/list', [AttendanceCorrectionRequestController::class, 'index']);
 });
