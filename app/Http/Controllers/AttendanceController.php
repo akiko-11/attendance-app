@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AttendanceListService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -98,5 +99,20 @@ class AttendanceController extends Controller
         }
 
         return redirect('/attendance');
+    }
+
+    // 勤怠一覧情報取得処理
+    public function list(
+        Request $request,
+        AttendanceListService $attendanceListService
+    ): View {
+        $user = Auth::user();
+
+        $data = $attendanceListService->getListData(
+            $user,
+            $request->date
+        );
+
+        return view('user.user-attendance-list', $data);
     }
 }
