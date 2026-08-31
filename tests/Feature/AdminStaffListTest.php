@@ -42,4 +42,25 @@ class AdminStaffListTest extends TestCase
         $response->assertSeeText($user2->name);
         $response->assertSeeText($user2->email);
     }
+
+    // 一般ユーザーがアクセスした場合は403になる
+    public function test_general_user_cannot_access_admin_staff_list(): void
+    {
+        $user = User::factory()->create([
+            'admin_status' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/admin/staff/list');
+
+        $response->assertForbidden();
+    }
+
+    // 未ログイン時はログイン画面へ遷移する
+    public function test_guest_is_redirected_to_login_from_admin_staff_list(): void
+    {
+        $response = $this->get('/admin/staff/list');
+
+        $response->assertRedirect('/login');
+    }
 }
