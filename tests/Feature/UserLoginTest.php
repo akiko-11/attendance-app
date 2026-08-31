@@ -114,8 +114,9 @@ class UserLoginTest extends TestCase
 
         $this->actingAs($user);
 
-        $this->post('/logout');
+        $response = $this->post('/logout');
 
+        $response->assertRedirect('/login');
         $this->assertGuest();
     }
 }

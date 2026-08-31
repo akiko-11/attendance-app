@@ -22,4 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance/list', [AttendanceController::class, 'list']);
 
     Route::get('/stamp_correction_request/list', [AttendanceCorrectionRequestController::class, 'index']);
+
+    Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('admin.logout');
 });
