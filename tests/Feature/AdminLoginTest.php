@@ -114,8 +114,9 @@ class AdminLoginTest extends TestCase
 
         $this->actingAs($user);
 
-        $this->post('/logout');
+        $response = $this->post('/admin/logout');
 
+        $response->assertRedirect('/admin/login');
         $this->assertGuest();
     }
 }
