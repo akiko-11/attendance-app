@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminAttendanceController;
+use App\Http\Controllers\AdminStaffAttendanceController;
 use App\Http\Controllers\AdminStaffController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceCorrectionRequestController;
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index']);
     Route::get('/admin/staff/list', [AdminStaffController::class, 'index']);
+    Route::get('/admin/attendance/staff/{id}', [AdminStaffAttendanceController::class, 'index']);
     Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('admin.logout');
 });
