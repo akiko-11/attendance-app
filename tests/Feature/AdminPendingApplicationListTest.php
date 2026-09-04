@@ -13,8 +13,8 @@ class AdminPendingApplicationListTest extends TestCase
 {
     use RefreshDatabase;
 
-    // 管理者が全一般ユーザーの承認待ち修正申請を確認できる
-    public function test_admin_can_view_all_general_users_pending_applications(): void
+    // 修正申請の承認処理が正しく行われる
+    public function test_admin_can_approve_correction_request_correctly(): void
     {
         Carbon::setTestNow('2026-09-02 10:00:00');
 

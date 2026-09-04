@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminApplicationApprovalController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\AdminStaffAttendanceController;
 use App\Http\Controllers\AdminStaffController;
@@ -31,6 +32,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index']);
     Route::get('/admin/staff/list', [AdminStaffController::class, 'index']);
     Route::get('/admin/attendance/staff/{id}', [AdminStaffAttendanceController::class, 'index']);
+    Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [
+        AdminApplicationApprovalController::class, 'show',
+    ]);
+    Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [
+        AdminApplicationApprovalController::class, 'approve',
+    ]);
     Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('admin.logout');
 });
