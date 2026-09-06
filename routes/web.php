@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminStaffAttendanceController;
 use App\Http\Controllers\AdminStaffController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceCorrectionRequestController;
+use App\Http\Controllers\AttendanceDetailController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
@@ -25,6 +26,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance', [AttendanceController::class, 'store']);
     Route::get('/attendance/list', [AttendanceController::class, 'list']);
     Route::get('/stamp_correction_request/list', [AttendanceCorrectionRequestController::class, 'index']);
+    // 勤怠詳細画面
+    Route::get('/attendance/detail/{id}', [
+        AttendanceDetailController::class, 'show',
+    ])->whereNumber('id');
+
+    // 提供Bladeの詳細リンクから、仕様のURLへ転送
+    Route::get('/attendance/{id}', function (int $id) {
+        return redirect('/attendance/detail/'.$id);
+    })->whereNumber('id');
 });
 
 // ログイン済み管理者
