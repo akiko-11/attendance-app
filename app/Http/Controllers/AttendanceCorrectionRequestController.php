@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAttendanceCorrectionRequest;
 use App\Services\AdminApplicationListService;
 use App\Services\ApplicationListService;
+use App\Services\AttendanceCorrectionRequestService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -30,5 +33,24 @@ class AttendanceCorrectionRequestController extends Controller
             'user' => $user,
             ...$data,
         ]);
+    }
+
+    // 勤怠修正申請を保存
+    public function store(
+        StoreAttendanceCorrectionRequest $request,
+        AttendanceCorrectionRequestService $attendanceCorrectionRequestService,
+        int $id
+    ): RedirectResponse {
+        $user = $request->user();
+
+        // Serviceへユーザー・勤怠ID・検証済みデータを渡して保存
+        $attendanceCorrectionRequestService->store(
+            $user,
+            $id,
+            $request->validated()
+        );
+
+        // 同じ勤怠の詳細画面へリダイレクト
+        return redirect("/attendance/detail/{$id}");
     }
 }
