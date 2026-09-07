@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index']);
     Route::post('/attendance', [AttendanceController::class, 'store']);
     Route::get('/attendance/list', [AttendanceController::class, 'list']);
+    Route::post('/attendance/{id}', [
+        AttendanceCorrectionRequestController::class, 'store',
+    ])->whereNumber('id');
     Route::get('/stamp_correction_request/list', [AttendanceCorrectionRequestController::class, 'index']);
     // 勤怠詳細画面
     Route::get('/attendance/detail/{id}', [
