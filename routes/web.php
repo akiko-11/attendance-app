@@ -28,6 +28,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/{id}', [
         AttendanceCorrectionRequestController::class, 'store',
     ])->whereNumber('id');
+    // 一般ユーザーの修正申請詳細
+    Route::get('/application/{id}', [
+        AttendanceCorrectionRequestController::class, 'show',
+    ])->whereNumber('id');
     Route::get('/stamp_correction_request/list', [AttendanceCorrectionRequestController::class, 'index']);
     // 勤怠詳細画面
     Route::get('/attendance/detail/{id}', [
