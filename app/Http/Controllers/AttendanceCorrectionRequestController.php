@@ -35,6 +35,21 @@ class AttendanceCorrectionRequestController extends Controller
         ]);
     }
 
+    // 申請一覧から対象の勤怠詳細へ遷移
+    public function show(int $id): RedirectResponse
+    {
+        $user = Auth::user();
+
+        // 本人の修正申請から、申請IDに一致するものを取得
+        $application = $user->attendanceCorrectionRequests()
+            ->findOrFail($id);
+
+        // 申請に紐づく勤怠の詳細画面へリダイレクト
+        return redirect(
+            "/attendance/detail/{$application->attendance_record_id}"
+        );
+    }
+
     // 勤怠修正申請を保存
     public function store(
         StoreAttendanceCorrectionRequest $request,
