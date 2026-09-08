@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminApplicationApprovalController;
 use App\Http\Controllers\AdminAttendanceController;
+use App\Http\Controllers\AdminAttendanceDetailController;
 use App\Http\Controllers\AdminStaffAttendanceController;
 use App\Http\Controllers\AdminStaffController;
 use App\Http\Controllers\AttendanceController;
@@ -20,7 +21,7 @@ Route::middleware('guest')->group(function () {
         ->name('admin.login.store');
 });
 
-// ログイン済み一般ユーザー
+// ログイン済みユーザー
 Route::middleware('auth')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index']);
     Route::post('/attendance', [AttendanceController::class, 'store']);
@@ -28,18 +29,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/{id}', [
         AttendanceCorrectionRequestController::class, 'store',
     ])->whereNumber('id');
-    // 一般ユーザーの修正申請詳細
     Route::get('/application/{id}', [
         AttendanceCorrectionRequestController::class, 'show',
     ])->whereNumber('id');
     Route::get('/stamp_correction_request/list', [AttendanceCorrectionRequestController::class, 'index']);
-    // 勤怠詳細画面
     Route::get('/attendance/detail/{id}', [
         AttendanceDetailController::class, 'show',
     ])->whereNumber('id');
-
-    // 提供Bladeの詳細リンクから、仕様のURLへ転送
+    // 提供Bladeの詳細リンクから、ユーザー種別に応じた仕様URLへ転送
     Route::get('/attendance/{id}', function (int $id) {
+        if (auth()->user()->admin_status) {
+            return redirect('/admin/attendance/'.$id);
+        }
+
         return redirect('/attendance/detail/'.$id);
     })->whereNumber('id');
 });
@@ -47,6 +49,9 @@ Route::middleware('auth')->group(function () {
 // ログイン済み管理者
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index']);
+    Route::get('/admin/attendance/{id}', [
+        AdminAttendanceDetailController::class, 'show',
+    ])->whereNumber('id');
     Route::get('/admin/staff/list', [AdminStaffController::class, 'index']);
     Route::get('/admin/attendance/staff/{id}', [AdminStaffAttendanceController::class, 'index']);
     Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [
