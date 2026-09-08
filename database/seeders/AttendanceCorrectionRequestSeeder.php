@@ -15,130 +15,163 @@ class AttendanceCorrectionRequestSeeder extends Seeder
         $user1 = User::where('email', 'user1@example.com')->firstOrFail();
         $user2 = User::where('email', 'user2@example.com')->firstOrFail();
 
-        // ユーザー1の直近の勤怠3件取得
-        $user1Attendances = AttendanceRecord::where('user_id', $user1->id)
-            ->orderByDesc('date')
-            ->limit(3)
-            ->get();
+        $user1Requests = [
+            [
+                'date' => '2026-09-08',
+                'new_clock_in' => '09:10',
+                'new_clock_out' => '18:00',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '出勤時間修正のため',
+                'approval_status' => false,
+                'created_at' => '2026-09-08 10:00:00',
+            ],
+            [
+                'date' => '2026-09-07',
+                'new_clock_in' => '08:50',
+                'new_clock_out' => '18:10',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '退勤時間修正のため',
+                'approval_status' => true,
+                'created_at' => '2026-09-08 09:00:00',
+            ],
+            [
+                'date' => '2026-08-28',
+                'new_clock_in' => '09:10',
+                'new_clock_out' => '18:10',
+                'break_in' => '12:10',
+                'break_out' => '13:00',
+                'comment' => '休憩時間修正のため',
+                'approval_status' => false,
+                'created_at' => '2026-09-01 10:00:00',
+            ],
+            [
+                'date' => '2026-08-20',
+                'new_clock_in' => '08:50',
+                'new_clock_out' => '18:00',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '出勤時間修正のため',
+                'approval_status' => true,
+                'created_at' => '2026-08-21 10:00:00',
+            ],
+            [
+                'date' => '2026-07-15',
+                'new_clock_in' => '09:00',
+                'new_clock_out' => '18:10',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '退勤時間修正のため',
+                'approval_status' => false,
+                'created_at' => '2026-07-16 10:00:00',
+            ],
+        ];
 
-        // ユーザー2の直近の勤怠3件取得
-        $user2Attendances = AttendanceRecord::where('user_id', $user2->id)
-            ->orderByDesc('date')
-            ->limit(3)
-            ->get();
+        $user2Requests = [
+            [
+                'date' => '2026-09-08',
+                'new_clock_in' => '09:00',
+                'new_clock_out' => '18:10',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '退勤時間修正のため',
+                'approval_status' => true,
+                'created_at' => '2026-09-08 11:00:00',
+            ],
+            [
+                'date' => '2026-09-04',
+                'new_clock_in' => '09:10',
+                'new_clock_out' => '18:00',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '出勤時間修正のため',
+                'approval_status' => false,
+                'created_at' => '2026-09-07 10:00:00',
+            ],
+            [
+                'date' => '2026-08-25',
+                'new_clock_in' => '09:00',
+                'new_clock_out' => '18:00',
+                'break_in' => '12:10',
+                'break_out' => '13:00',
+                'comment' => '休憩時間修正のため',
+                'approval_status' => true,
+                'created_at' => '2026-08-26 10:00:00',
+            ],
+            [
+                'date' => '2026-08-10',
+                'new_clock_in' => '09:10',
+                'new_clock_out' => '18:00',
+                'break_in' => '12:00',
+                'break_out' => '13:00',
+                'comment' => '出勤時間修正のため',
+                'approval_status' => false,
+                'created_at' => '2026-08-11 10:00:00',
+            ],
+            [
+                'date' => '2026-07-21',
+                'new_clock_in' => '08:50',
+                'new_clock_out' => '17:50',
+                'break_in' => '12:10',
+                'break_out' => '13:00',
+                'comment' => '休憩時間修正のため',
+                'approval_status' => true,
+                'created_at' => '2026-07-22 10:00:00',
+            ],
+        ];
 
-        // 以下、ユーザー1の修正申請作成
-        // 直近1件目、承認待ち：出勤時刻修正
-        $correctionRequest = AttendanceCorrectionRequest::factory()->create([
-            'user_id' => $user1->id,
-            'attendance_record_id' => $user1Attendances[0]->id,
-            'new_date' => $user1Attendances[0]->date->toDateString(),
-            'new_clock_in' => '09:10',
-            'new_clock_out' => '18:00',
-            'comment' => '出勤時間修正のため',
-            'approval_status' => false,
-        ]);
+        $this->createRequests($user1, $user1Requests);
+        $this->createRequests($user2, $user2Requests);
+    }
 
-        ProposalBreak::factory()->create([
-            'attendance_correction_request_id' => $correctionRequest->id,
-        ]);
+    private function createRequests(User $user, array $requests): void
+    {
+        $dates = array_column($requests, 'date');
 
-        // 直近2件目、承認待ち：休憩時刻修正
-        $correctionRequest = AttendanceCorrectionRequest::factory()->create([
-            'user_id' => $user1->id,
-            'attendance_record_id' => $user1Attendances[1]->id,
-            'new_date' => $user1Attendances[1]->date->toDateString(),
-            'new_clock_in' => '09:00',
-            'new_clock_out' => '18:00',
-            'comment' => '休憩時間修正のため',
-            'approval_status' => false,
-        ]);
+        $attendances = AttendanceRecord::where('user_id', $user->id)
+            ->whereIn('date', $dates)
+            ->get()
+            ->keyBy(fn ($attendance) => $attendance->date->toDateString());
 
-        ProposalBreak::factory()->create([
-            'attendance_correction_request_id' => $correctionRequest->id,
-            'break_in' => '12:10',
-            'break_out' => '13:00',
-        ]);
+        foreach ($requests as $data) {
+            $attendance = $attendances[$data['date']];
 
-        // 直近3件目、承認済み：退勤時刻修正
-        $correctionRequest = AttendanceCorrectionRequest::factory()->create([
-            'user_id' => $user1->id,
-            'attendance_record_id' => $user1Attendances[2]->id,
-            'new_date' => $user1Attendances[2]->date->toDateString(),
-            'new_clock_in' => '09:00',
-            'new_clock_out' => '18:10',
-            'comment' => '退勤時間修正のため',
-            'approval_status' => true,
-        ]);
+            $correctionRequest = AttendanceCorrectionRequest::factory()->create([
+                'user_id' => $user->id,
+                'attendance_record_id' => $attendance->id,
+                'new_date' => $attendance->date->toDateString(),
+                'new_clock_in' => $data['new_clock_in'],
+                'new_clock_out' => $data['new_clock_out'],
+                'comment' => $data['comment'],
+                'approval_status' => $data['approval_status'],
+                'created_at' => $data['created_at'],
+                'updated_at' => $data['created_at'],
+            ]);
 
-        ProposalBreak::factory()->create([
-            'attendance_correction_request_id' => $correctionRequest->id,
-        ]);
+            ProposalBreak::factory()->create([
+                'attendance_correction_request_id' => $correctionRequest->id,
+                'break_in' => $data['break_in'],
+                'break_out' => $data['break_out'],
+            ]);
 
-        // 承認済みの修正内容を正式な勤怠に反映
-        $user1Attendances[2]->update([
-            'clock_in' => '09:00',
-            'clock_out' => '18:10',
-        ]);
+            if (! $data['approval_status']) {
+                continue;
+            }
 
-        // 以下、ユーザー2の修正申請作成
-        // 直近1件目、承認待ち：出勤時刻修正
-        $correctionRequest = AttendanceCorrectionRequest::factory()->create([
-            'user_id' => $user2->id,
-            'attendance_record_id' => $user2Attendances[0]->id,
-            'new_date' => $user2Attendances[0]->date->toDateString(),
-            'new_clock_in' => '09:10',
-            'new_clock_out' => '18:00',
-            'comment' => '出勤時間修正のため',
-            'approval_status' => false,
-        ]);
+            $attendance->update([
+                'date' => $data['date'],
+                'clock_in' => $data['new_clock_in'],
+                'clock_out' => $data['new_clock_out'],
+                'comment' => $data['comment'],
+            ]);
 
-        ProposalBreak::factory()->create([
-            'attendance_correction_request_id' => $correctionRequest->id,
-        ]);
+            $attendance->breaks()->delete();
 
-        // 直近2件目、承認済み：休憩時刻修正
-        $correctionRequest = AttendanceCorrectionRequest::factory()->create([
-            'user_id' => $user2->id,
-            'attendance_record_id' => $user2Attendances[1]->id,
-            'new_date' => $user2Attendances[1]->date->toDateString(),
-            'new_clock_in' => '09:00',
-            'new_clock_out' => '18:00',
-            'comment' => '休憩時間修正のため',
-            'approval_status' => true,
-        ]);
-
-        ProposalBreak::factory()->create([
-            'attendance_correction_request_id' => $correctionRequest->id,
-            'break_in' => '12:10',
-            'break_out' => '13:00',
-        ]);
-
-        // 承認済みの修正内容を正式な休憩に反映
-        $user2Attendances[1]->breaks()->firstOrFail()->update([
-            'break_in' => '12:10',
-            'break_out' => '13:00',
-        ]);
-
-        // 直近3件目、承認済み：退勤時刻修正
-        $correctionRequest = AttendanceCorrectionRequest::factory()->create([
-            'user_id' => $user2->id,
-            'attendance_record_id' => $user2Attendances[2]->id,
-            'new_date' => $user2Attendances[2]->date->toDateString(),
-            'new_clock_in' => '09:00',
-            'new_clock_out' => '18:10',
-            'comment' => '退勤時間修正のため',
-            'approval_status' => true,
-        ]);
-
-        ProposalBreak::factory()->create([
-            'attendance_correction_request_id' => $correctionRequest->id,
-        ]);
-
-        // 承認済みの修正内容を正式な勤怠に反映
-        $user2Attendances[2]->update([
-            'clock_in' => '09:00',
-            'clock_out' => '18:10',
-        ]);
+            $attendance->breaks()->create([
+                'break_in' => $data['break_in'],
+                'break_out' => $data['break_out'],
+            ]);
+        }
     }
 }
