@@ -8,15 +8,17 @@ use App\Http\Controllers\AdminStaffController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceCorrectionRequestController;
 use App\Http\Controllers\AttendanceDetailController;
+use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
 // 未ログインユーザー
 Route::middleware('guest')->group(function () {
+    Route::get('/register', [RegisterController::class, 'create']);
+    Route::post('/register', [RegisterController::class, 'store']);
     Route::get('/admin/login', function () {
         return view('admin.admin-login');
     })->name('admin.login');
-
     Route::post('/admin/login', [AuthenticatedSessionController::class, 'store'])
         ->name('admin.login.store');
 });
