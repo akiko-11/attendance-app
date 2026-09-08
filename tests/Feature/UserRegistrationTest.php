@@ -134,4 +134,17 @@ class UserRegistrationTest extends TestCase
 
         $this->assertAuthenticated();
     }
+
+    // 会員登録画面からログイン画面に遷移できる
+    public function test_register_page_has_login_link(): void
+    {
+        $response = $this->get('/register');
+
+        $response->assertStatus(200);
+        $response->assertSee('href="/login"', false);
+
+        $loginResponse = $this->get('/login');
+
+        $loginResponse->assertStatus(200);
+    }
 }
