@@ -6,6 +6,7 @@ use App\Models\AttendanceBreak;
 use App\Models\AttendanceRecord;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class AdminAttendanceDetailTest extends TestCase
@@ -38,14 +39,9 @@ class AdminAttendanceDetailTest extends TestCase
     {
         [$admin, , $attendance] = $this->createAttendanceData();
 
-        $response = $this
-            ->actingAs($admin)
-            ->post(
-                "/attendance/{$attendance->id}",
-                $this->validUpdateData([
-                    'new_clock_in' => '19:00',
-                ])
-            );
+        $response = $this->postAttendanceUpdate($admin, $attendance, [
+            'new_clock_in' => '19:00',
+        ]);
 
         $response->assertSessionHasErrors([
             'new_clock_in' => '出勤時間もしくは退勤時間が不適切な値です',
@@ -57,15 +53,10 @@ class AdminAttendanceDetailTest extends TestCase
     {
         [$admin, , $attendance] = $this->createAttendanceData();
 
-        $response = $this
-            ->actingAs($admin)
-            ->post(
-                "/attendance/{$attendance->id}",
-                $this->validUpdateData([
-                    'new_break_in' => [0 => '19:00'],
-                    'new_break_out' => [0 => ''],
-                ])
-            );
+        $response = $this->postAttendanceUpdate($admin, $attendance, [
+            'new_break_in' => [0 => '19:00'],
+            'new_break_out' => [0 => ''],
+        ]);
 
         $response->assertSessionHasErrors([
             'new_break_in.0' => '休憩時間が不適切な値です',
@@ -77,14 +68,9 @@ class AdminAttendanceDetailTest extends TestCase
     {
         [$admin, , $attendance] = $this->createAttendanceData();
 
-        $response = $this
-            ->actingAs($admin)
-            ->post(
-                "/attendance/{$attendance->id}",
-                $this->validUpdateData([
-                    'new_break_out' => [0 => '19:00'],
-                ])
-            );
+        $response = $this->postAttendanceUpdate($admin, $attendance, [
+            'new_break_out' => [0 => '19:00'],
+        ]);
 
         $response->assertSessionHasErrors([
             'new_break_out.0' => '休憩時間もしくは退勤時間が不適切な値です',
@@ -96,14 +82,9 @@ class AdminAttendanceDetailTest extends TestCase
     {
         [$admin, , $attendance] = $this->createAttendanceData();
 
-        $response = $this
-            ->actingAs($admin)
-            ->post(
-                "/attendance/{$attendance->id}",
-                $this->validUpdateData([
-                    'comment' => '',
-                ])
-            );
+        $response = $this->postAttendanceUpdate($admin, $attendance, [
+            'comment' => '',
+        ]);
 
         $response->assertSessionHasErrors([
             'comment' => '備考を記入してください',
@@ -115,18 +96,13 @@ class AdminAttendanceDetailTest extends TestCase
     {
         [$admin, $user, $attendance] = $this->createAttendanceData();
 
-        $response = $this
-            ->actingAs($admin)
-            ->post(
-                "/attendance/{$attendance->id}",
-                $this->validUpdateData([
-                    'new_clock_in' => '09:10',
-                    'new_clock_out' => '18:10',
-                    'new_break_in' => [0 => '12:10'],
-                    'new_break_out' => [0 => '13:10'],
-                    'comment' => '管理者修正テスト',
-                ])
-            );
+        $response = $this->postAttendanceUpdate($admin, $attendance, [
+            'new_clock_in' => '09:10',
+            'new_clock_out' => '18:10',
+            'new_break_in' => [0 => '12:10'],
+            'new_break_out' => [0 => '13:10'],
+            'comment' => '管理者修正テスト',
+        ]);
 
         // attendance_records が更新されたことを確認
         $this->assertDatabaseHas('attendance_records', [
@@ -153,6 +129,17 @@ class AdminAttendanceDetailTest extends TestCase
 
         // リダイレクトの確認
         $response->assertRedirect("/admin/attendance/{$attendance->id}");
+
+        // 修正後の内容が一般ユーザーの勤怠詳細にも表示される
+        $userResponse = $this->actingAs($user)
+            ->get("/attendance/detail/{$attendance->id}");
+
+        $userResponse->assertStatus(200);
+        $userResponse->assertSee('value="09:10"', false);
+        $userResponse->assertSee('value="18:10"', false);
+        $userResponse->assertSee('value="12:10"', false);
+        $userResponse->assertSee('value="13:10"', false);
+        $userResponse->assertSee('管理者修正テスト');
     }
 
     // テストの前提条件（ユーザー、勤怠、休憩の作成）
@@ -194,5 +181,17 @@ class AdminAttendanceDetailTest extends TestCase
             'new_break_out' => [0 => '13:00'],
             'comment' => '通常勤務',
         ], $overrides);
+    }
+
+    // 管理者として勤怠の修正内容を送信する
+    private function postAttendanceUpdate(
+        User $admin,
+        AttendanceRecord $attendance,
+        array $overrides
+    ): TestResponse {
+        return $this->actingAs($admin)->post(
+            "/attendance/{$attendance->id}",
+            $this->validUpdateData($overrides)
+        );
     }
 }

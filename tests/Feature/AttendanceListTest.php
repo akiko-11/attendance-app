@@ -28,8 +28,6 @@ class AttendanceListTest extends TestCase
 
         // 現在の年月が表示される
         $response->assertSee('2026/08');
-
-        Carbon::setTestNow();
     }
 
     // 自分の勤怠情報がすべて表示される
@@ -83,8 +81,6 @@ class AttendanceListTest extends TestCase
         // 他ユーザーの勤怠時刻は表示されない
         $response->assertDontSee('07:15');
         $response->assertDontSee('16:45');
-
-        Carbon::setTestNow();
     }
 
     // 「前月」を押下した時に前月の情報が表示される
@@ -116,8 +112,6 @@ class AttendanceListTest extends TestCase
         $response->assertSee('07/28(火)');
         $response->assertSee('09:00');
         $response->assertSee('18:00');
-
-        Carbon::setTestNow();
     }
 
     // 「翌月」を押下した時に翌月の情報が表示される
@@ -149,7 +143,30 @@ class AttendanceListTest extends TestCase
         $response->assertSee('09/28(月)');
         $response->assertSee('09:00');
         $response->assertSee('18:00');
+    }
 
+    // 月末の初期表示でも前月・翌月リンクが正しい
+    public function test_month_navigation_links_are_correct_at_month_end(): void
+    {
+        Carbon::setTestNow('2026-08-31 10:00:00');
+
+        $user = User::factory()->create([
+            'admin_status' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/attendance/list');
+
+        $response->assertStatus(200);
+        $response->assertSeeText('2026/08');
+        $response->assertSee('href="?date=2026-07"', false);
+        $response->assertSee('href="?date=2026-09"', false);
+    }
+
+    protected function tearDown(): void
+    {
         Carbon::setTestNow();
+
+        parent::tearDown();
     }
 }

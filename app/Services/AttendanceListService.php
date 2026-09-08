@@ -14,7 +14,7 @@ class AttendanceListService
         if ($requestedDate) {
             $date = Carbon::parse($requestedDate)->startOfMonth();
         } else {
-            $date = now();
+            $date = now()->startOfMonth();
         }
 
         // 前月

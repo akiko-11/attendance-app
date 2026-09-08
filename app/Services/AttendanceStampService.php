@@ -42,12 +42,24 @@ class AttendanceStampService
         // 今日の勤怠を取得
         $attendance = $this->getTodayAttendance($user);
 
-        // 休憩レコードを作成
-        if ($attendance) {
-            $attendance->breaks()->create([
-                'break_in' => now()->format('H:i:s'),
-            ]);
+        // 出勤していない場合
+        if (! $attendance) {
+            return;
         }
+
+        // 退勤済みの場合
+        if ($attendance->clock_out !== null) {
+            return;
+        }
+
+        // 未終了の休憩がある場合
+        if ($attendance->breaks()->whereNull('break_out')->exists()) {
+            return;
+        }
+
+        $attendance->breaks()->create([
+            'break_in' => now()->format('H:i:s'),
+        ]);
     }
 
     // 休憩終了処理
