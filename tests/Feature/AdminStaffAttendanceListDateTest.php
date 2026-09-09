@@ -126,6 +126,28 @@ class AdminStaffAttendanceListDateTest extends TestCase
         $response->assertDontSeeText('09:10');
     }
 
+    // 月末の初期表示でも前月・翌月リンクが正しい
+    public function test_month_navigation_links_are_correct_at_month_end(): void
+    {
+        Carbon::setTestNow('2026-08-31 10:00:00');
+
+        $admin = User::factory()->create([
+            'admin_status' => true,
+        ]);
+
+        $user = User::factory()->create([
+            'admin_status' => false,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get("/admin/attendance/staff/{$user->id}");
+
+        $response->assertStatus(200);
+        $response->assertSeeText('2026/08');
+        $response->assertSee('href="?date=2026-07"', false);
+        $response->assertSee('href="?date=2026-09"', false);
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();
