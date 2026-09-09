@@ -30,8 +30,8 @@ class AdminAccessControlTest extends TestCase
         $response->assertRedirect('/login');
     }
 
-    // 一般ユーザーは管理者画面へアクセスできない
-    public function test_general_user_cannot_access_admin_page(): void
+    // 一般ユーザーが管理者画面へアクセスした場合、勤怠登録画面へ戻る
+    public function test_general_user_is_redirected_from_admin_page(): void
     {
         $user = User::factory()->create([
             'admin_status' => false,
@@ -40,7 +40,7 @@ class AdminAccessControlTest extends TestCase
         $response = $this->actingAs($user)
             ->get('/test/admin');
 
-        $response->assertStatus(403);
+        $response->assertRedirect('/attendance');
     }
 
     // 管理者は管理者画面へアクセスできる
@@ -55,5 +55,18 @@ class AdminAccessControlTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('OK');
+    }
+
+    // 一般ユーザーが実際の管理者画面へアクセスすると勤怠登録画面へ戻る
+    public function test_general_user_is_redirected_from_actual_admin_page(): void
+    {
+        $user = User::factory()->create([
+            'admin_status' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/admin/attendance/list');
+
+        $response->assertRedirect('/attendance');
     }
 }

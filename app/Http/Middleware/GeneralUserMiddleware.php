@@ -6,16 +6,15 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class GeneralUserMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()->admin_status) {
-            // 一般ユーザーの勤怠登録画面へ遷移
-            return redirect('/attendance');
+        if ($request->user()->admin_status) {
+            return redirect('/admin/attendance/list');
         }
 
-        // 管理者の場合はそのまま処理を続行
+        // 一般ユーザーの場合はそのまま処理を続行
         return $next($request);
     }
 }
