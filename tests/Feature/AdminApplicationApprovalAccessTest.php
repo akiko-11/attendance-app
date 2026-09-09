@@ -43,7 +43,7 @@ class AdminApplicationApprovalAccessTest extends TestCase
         $response = $this->actingAs($user)
             ->get("/stamp_correction_request/approve/{$application->id}");
 
-        $response->assertForbidden();
+        $response->assertRedirect('/attendance');
     }
 
     // 一般ユーザーは修正申請を承認できない
@@ -77,8 +77,8 @@ class AdminApplicationApprovalAccessTest extends TestCase
         $response = $this->actingAs($user)
             ->post("/stamp_correction_request/approve/{$application->id}");
 
-        // 403であることを確認
-        $response->assertForbidden();
+        // リダイレクトされる
+        $response->assertRedirect('/attendance');
 
         // 申請が未承認のままで、勤怠が変更されていないことを確認
         $this->assertDatabaseHas('attendance_correction_requests', [

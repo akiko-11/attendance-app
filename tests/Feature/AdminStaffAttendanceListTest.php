@@ -111,7 +111,7 @@ class AdminStaffAttendanceListTest extends TestCase
         $response = $this->actingAs($user)
             ->get("/admin/attendance/staff/{$user->id}");
 
-        $response->assertForbidden();
+        $response->assertRedirect('/attendance');
     }
 
     // 未ログイン時はログイン画面へ遷移する
