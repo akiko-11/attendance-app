@@ -12,6 +12,19 @@ use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
+// 入口ルート
+Route::get('/', function () {
+    if (! auth()->check()) {
+        return redirect('/login');
+    }
+
+    if (auth()->user()->admin_status) {
+        return redirect('/admin/attendance/list');
+    }
+
+    return redirect('/attendance');
+});
+
 // 未ログインユーザー
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'create']);

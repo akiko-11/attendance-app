@@ -124,11 +124,13 @@ MAIL_PORT=1025
 
 ブラウザで以下へアクセスします。
 
-| 画面         | URL                     |
-| ---------- | ----------------------- |
-| アプリケーション   | `http://localhost`      |
-| phpMyAdmin | `http://localhost:8080` |
-| Mailpit    | `http://localhost:8025` |
+| 画面         | URL                            |
+| ---------- | ------------------------------ |
+| アプリケーション   | `http://localhost`             |
+| 一般ユーザーログイン | `http://localhost/login`       |
+| 管理者ログイン    | `http://localhost/admin/login` |
+| phpMyAdmin | `http://localhost:8080`        |
+| Mailpit    | `http://localhost:8025`        |
 
 ### 10. Sailエイリアスを設定（任意）
 
