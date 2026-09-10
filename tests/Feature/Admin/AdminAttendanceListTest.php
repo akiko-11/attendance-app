@@ -18,45 +18,28 @@ class AdminAttendanceListTest extends TestCase
     {
         Carbon::setTestNow('2026-08-31 19:00:00');
 
-        $admin = User::factory()->create([
-            'name' => '管理者テスト',
-            'admin_status' => true,
-        ]);
+        [$admin, $adminAttendance] = $this->createUserWithAttendance(
+            [
+                'name' => '管理者テスト',
+                'admin_status' => true,
+            ],
+            [
+                'clock_in' => '09:30:00',
+                'clock_out' => '19:00:00',
+            ],
+            [
+                'break_in' => '12:30:00',
+                'break_out' => '13:30:00',
+            ]
+        );
 
-        $user1 = User::factory()->create([
-            'name' => 'ユーザー1',
-            'admin_status' => false,
-        ]);
-
-        // 管理者の勤怠
-        $adminAttendanceRecord = AttendanceRecord::create([
-            'user_id' => $admin->id,
-            'date' => '2026-08-31',
-            'clock_in' => '09:30:00',
-            'clock_out' => '19:00:00',
-        ]);
-
-        // ユーザー1の勤怠
-        $user1AttendanceRecord = AttendanceRecord::create([
-            'user_id' => $user1->id,
-            'date' => '2026-08-31',
-            'clock_in' => '09:00:00',
-            'clock_out' => '18:00:00',
-        ]);
-
-        // 管理者の休憩
-        AttendanceBreak::create([
-            'attendance_record_id' => $adminAttendanceRecord->id,
-            'break_in' => '12:30:00',
-            'break_out' => '13:30:00',
-        ]);
-
-        // ユーザー1の休憩
-        AttendanceBreak::create([
-            'attendance_record_id' => $user1AttendanceRecord->id,
-            'break_in' => '12:00:00',
-            'break_out' => '13:00:00',
-        ]);
+        [$user, $userAttendance] = $this->createUserWithAttendance(
+            [
+                'name' => 'ユーザー1',
+            ],
+            [],
+            []
+        );
 
         $response = $this->actingAs($admin)
             ->get('/admin/attendance/list?date=2026-08-31');
@@ -82,8 +65,6 @@ class AdminAttendanceListTest extends TestCase
         // 合計
         $response->assertSee('8:30');
         $response->assertSee('8:00');
-
-        Carbon::setTestNow();
     }
 
     // 未完了の勤怠項目は空欄で表示される
@@ -91,28 +72,19 @@ class AdminAttendanceListTest extends TestCase
     {
         Carbon::setTestNow('2026-08-31 10:00:00');
 
-        $admin = User::factory()->create([
+        $admin = $this->createUser([
             'admin_status' => true,
         ]);
 
-        // 出勤済み・未退勤の勤怠を準備
-        $user1 = User::factory()->create([
-            'name' => 'ユーザー1',
-            'admin_status' => false,
-        ]);
-
-        $user1AttendanceRecord = AttendanceRecord::create([
-            'user_id' => $user1->id,
-            'date' => '2026-08-31',
-            'clock_in' => '09:00:00',
-            'clock_out' => null,
-        ]);
-
-        AttendanceBreak::create([
-            'attendance_record_id' => $user1AttendanceRecord->id,
-            'break_in' => '12:00:00',
-            'break_out' => '13:00:00',
-        ]);
+        [, $attendance] = $this->createUserWithAttendance(
+            [
+                'name' => 'ユーザー1',
+            ],
+            [
+                'clock_out' => null,
+            ],
+            []
+        );
 
         $response = $this->actingAs($admin)
             ->get('/admin/attendance/list?date=2026-08-31');
@@ -128,8 +100,6 @@ class AdminAttendanceListTest extends TestCase
             '1:00',
             $blankField, // 合計
         ], false);
-
-        Carbon::setTestNow();
     }
 
     // 未完了の休憩は休憩時間に含めず空欄で表示される
@@ -137,29 +107,21 @@ class AdminAttendanceListTest extends TestCase
     {
         Carbon::setTestNow('2026-08-31 13:00:00');
 
-        $admin = User::factory()->create([
+        $admin = $this->createUser([
             'admin_status' => true,
         ]);
 
-        $user = User::factory()->create([
-            'name' => 'ユーザー1',
-            'admin_status' => false,
-        ]);
-
-        // 出勤済み・未退勤の勤怠を準備
-        $userAttendanceRecord = AttendanceRecord::create([
-            'user_id' => $user->id,
-            'date' => '2026-08-31',
-            'clock_in' => '09:00:00',
-            'clock_out' => null,
-        ]);
-
-        // 開始済み・未終了の休憩を準備
-        AttendanceBreak::create([
-            'attendance_record_id' => $userAttendanceRecord->id,
-            'break_in' => '12:00:00',
-            'break_out' => null,
-        ]);
+        [, $attendance] = $this->createUserWithAttendance(
+            [
+                'name' => 'ユーザー1',
+            ],
+            [
+                'clock_out' => null,
+            ],
+            [
+                'break_out' => null,
+            ]
+        );
 
         $response = $this->actingAs($admin)
             ->get('/admin/attendance/list?date=2026-08-31');
@@ -175,7 +137,52 @@ class AdminAttendanceListTest extends TestCase
             $blankField, // 休憩
             $blankField, // 合計
         ], false);
+    }
 
+    // テスト用ユーザーを作成する
+    private function createUser(array $overrides = []): User
+    {
+        return User::factory()->create(
+            array_merge([
+                'admin_status' => false,
+            ], $overrides)
+        );
+    }
+
+    // テスト用ユーザーと勤怠、休憩を作成する
+    private function createUserWithAttendance(
+        array $userOverrides = [],
+        array $attendanceOverrides = [],
+        ?array $breakOverrides = null
+    ): array {
+        $user = $this->createUser($userOverrides);
+
+        $attendance = AttendanceRecord::create(
+            array_merge([
+                'user_id' => $user->id,
+                'date' => '2026-08-31',
+                'clock_in' => '09:00:00',
+                'clock_out' => '18:00:00',
+            ], $attendanceOverrides)
+        );
+
+        if ($breakOverrides !== null) {
+            AttendanceBreak::create(
+                array_merge([
+                    'attendance_record_id' => $attendance->id,
+                    'break_in' => '12:00:00',
+                    'break_out' => '13:00:00',
+                ], $breakOverrides)
+            );
+        }
+
+        return [$user, $attendance];
+    }
+
+    protected function tearDown(): void
+    {
         Carbon::setTestNow();
+
+        parent::tearDown();
     }
 }

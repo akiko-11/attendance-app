@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\Access;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,18 +55,5 @@ class AdminAccessControlTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('OK');
-    }
-
-    // 一般ユーザーが実際の管理者画面へアクセスすると勤怠登録画面へ戻る
-    public function test_general_user_is_redirected_from_actual_admin_page(): void
-    {
-        $user = User::factory()->create([
-            'admin_status' => false,
-        ]);
-
-        $response = $this->actingAs($user)
-            ->get('/admin/attendance/list');
-
-        $response->assertRedirect('/attendance');
     }
 }

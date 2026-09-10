@@ -127,4 +127,49 @@ class AdminStaffAttendanceListTest extends TestCase
 
         $response->assertRedirect('/login');
     }
+
+    // スタッフ別勤怠一覧から対象の勤怠詳細へ遷移できる
+    public function test_admin_can_navigate_from_staff_attendance_list_to_detail(): void
+    {
+        $admin = User::factory()->create([
+            'admin_status' => true,
+        ]);
+
+        $user = User::factory()->create([
+            'name' => '対象ユーザー',
+            'admin_status' => false,
+        ]);
+
+        $attendance = AttendanceRecord::factory()->create([
+            'user_id' => $user->id,
+            'date' => '2026-08-03',
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get("/admin/attendance/staff/{$user->id}?date=2026-08");
+
+        $response->assertStatus(200);
+        $response->assertSee(
+            'href="'.url("/attendance/{$attendance->id}").'"',
+            false
+        );
+
+        $linkResponse = $this->actingAs($admin)
+            ->get("/attendance/{$attendance->id}");
+
+        $linkResponse->assertRedirect(
+            "/admin/attendance/{$attendance->id}"
+        );
+
+        $detailResponse = $this->actingAs($admin)
+            ->get("/admin/attendance/{$attendance->id}");
+
+        $detailResponse->assertStatus(200);
+        $detailResponse->assertSee(
+            'value="対象ユーザー"',
+            false
+        );
+    }
 }

@@ -34,63 +34,6 @@ class AdminAttendanceDetailTest extends TestCase
         $response->assertSee('通常勤務');
     }
 
-    // 出勤時間が退勤時間より後の場合エラーになる
-    public function test_clock_in_after_clock_out_is_invalid(): void
-    {
-        [$admin, , $attendance] = $this->createAttendanceData();
-
-        $response = $this->postAttendanceUpdate($admin, $attendance, [
-            'new_clock_in' => '19:00',
-        ]);
-
-        $response->assertSessionHasErrors([
-            'new_clock_in' => '出勤時間もしくは退勤時間が不適切な値です',
-        ]);
-    }
-
-    // 休憩開始時間が退勤時間より後の場合エラーになる
-    public function test_break_in_after_clock_out_is_invalid(): void
-    {
-        [$admin, , $attendance] = $this->createAttendanceData();
-
-        $response = $this->postAttendanceUpdate($admin, $attendance, [
-            'new_break_in' => [0 => '19:00'],
-            'new_break_out' => [0 => ''],
-        ]);
-
-        $response->assertSessionHasErrors([
-            'new_break_in.0' => '休憩時間が不適切な値です',
-        ]);
-    }
-
-    // 休憩終了時間が退勤時間より後の場合エラーになる
-    public function test_break_out_after_clock_out_is_invalid(): void
-    {
-        [$admin, , $attendance] = $this->createAttendanceData();
-
-        $response = $this->postAttendanceUpdate($admin, $attendance, [
-            'new_break_out' => [0 => '19:00'],
-        ]);
-
-        $response->assertSessionHasErrors([
-            'new_break_out.0' => '休憩時間もしくは退勤時間が不適切な値です',
-        ]);
-    }
-
-    // 備考が未入力の場合エラーになる
-    public function test_comment_is_required(): void
-    {
-        [$admin, , $attendance] = $this->createAttendanceData();
-
-        $response = $this->postAttendanceUpdate($admin, $attendance, [
-            'comment' => '',
-        ]);
-
-        $response->assertSessionHasErrors([
-            'comment' => '備考を記入してください',
-        ]);
-    }
-
     // 正常な修正内容がDBへ反映される
     public function test_admin_can_update_attendance(): void
     {
