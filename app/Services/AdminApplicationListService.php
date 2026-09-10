@@ -14,12 +14,11 @@ class AdminApplicationListService
             'user',
             'attendanceRecord',
         ])
-        // 一般ユーザーの申請に限定
-        // 並び順：申請日時が新しい順、申請日時が同じ場合、IDが大きい順
-            // 一般ユーザーの申請に限定
+    // 一般ユーザーの申請に限定
             ->whereHas('user', function ($query) {
                 $query->where('admin_status', false);
             })
+    // 並び順：申請日時が新しい順、申請日時が同じ場合、IDが大きい順
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get();

@@ -62,6 +62,27 @@ class UserLoginTest extends TestCase
         ]);
     }
 
+    // 登録済みメールアドレスでもパスワードが一致しない場合、ログインに失敗する
+    public function test_login_fails_when_password_is_incorrect(): void
+    {
+        User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => Hash::make('password'),
+            'admin_status' => false,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => 'test@example.com',
+            'password' => 'wrong_password',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'email' => 'ログイン情報が登録されていません',
+        ]);
+
+        $this->assertGuest();
+    }
+
     // 管理者は一般ユーザー用ログインからログインできない
     public function test_admin_user_cannot_login_from_general_user_login(): void
     {
@@ -118,5 +139,18 @@ class UserLoginTest extends TestCase
 
         $response->assertRedirect('/login');
         $this->assertGuest();
+    }
+
+    // ログイン画面から会員登録画面に遷移できる
+    public function test_login_page_has_register_link(): void
+    {
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertSee('href="/register"', false);
+
+        $registerResponse = $this->get('/register');
+
+        $registerResponse->assertStatus(200);
     }
 }

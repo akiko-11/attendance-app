@@ -48,7 +48,11 @@ class ClockOutTest extends TestCase
             Carbon::parse($attendance->date)->toDateString()
         );
 
-        Carbon::setTestNow();
+        $pageResponse = $this->actingAs($user)->get('/attendance');
+
+        $pageResponse->assertStatus(200);
+        $pageResponse->assertSeeText('退勤済');
+        $pageResponse->assertSeeText('お疲れ様でした。');
     }
 
     // 「退勤」ボタンは1日に1回だけ押下できる
@@ -88,7 +92,12 @@ class ClockOutTest extends TestCase
             'user_id' => $user->id,
             'clock_out' => '19:00:00',
         ]);
+    }
 
+    protected function tearDown(): void
+    {
         Carbon::setTestNow();
+
+        parent::tearDown();
     }
 }

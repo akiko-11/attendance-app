@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,14 +13,9 @@ class UserRegistrationTest extends TestCase
     // 名前が未入力の場合、バリデーションに失敗する
     public function test_name_is_required_for_registration(): void
     {
-        $data = [
+        $response = $this->post('/register', $this->validRegistrationData([
             'name' => '',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
-
-        $response = $this->post('/register', $data);
+        ]));
 
         $response->assertSessionHasErrors([
             'name' => 'お名前を入力してください',
@@ -29,14 +25,9 @@ class UserRegistrationTest extends TestCase
     // メールアドレスが未入力の場合、バリデーションに失敗する
     public function test_email_is_required_for_registration(): void
     {
-        $data = [
-            'name' => 'テスト 太郎',
+        $response = $this->post('/register', $this->validRegistrationData([
             'email' => '',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
-
-        $response = $this->post('/register', $data);
+        ]));
 
         $response->assertSessionHasErrors([
             'email' => 'メールアドレスを入力してください',
@@ -46,48 +37,47 @@ class UserRegistrationTest extends TestCase
     // メールアドレスがメール形式ではない場合、バリデーションに失敗する
     public function test_email_must_be_valid_format_for_registration(): void
     {
-        $data = [
-            'name' => 'テスト 太郎',
+        $response = $this->post('/register', $this->validRegistrationData([
             'email' => 'invalid-email',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
-
-        $response = $this->post('/register', $data);
+        ]));
 
         $response->assertSessionHasErrors([
             'email' => 'メールアドレスはメール形式で入力してください',
         ]);
     }
 
-    // パスワードが8文字未満の場合、バリデーションに失敗する
-    public function test_password_must_be_at_least_8_characters_for_registration(): void
+    // パスワードが7文字の場合、バリデーションに失敗する
+    public function test_password_with_7_characters_fails_registration(): void
     {
-        $data = [
-            'name' => 'テスト 太郎',
+        $response = $this->post('/register', $this->validRegistrationData([
+            'password' => '1234567',
+            'password_confirmation' => '1234567',
+        ]));
+
+        $response->assertSessionHasErrors('password');
+    }
+
+    // パスワードが8文字の場合、正常に登録できる
+    public function test_password_with_8_characters_can_register(): void
+    {
+        $response = $this->post('/register', $this->validRegistrationData([
+            'password' => '12345678',
+            'password_confirmation' => '12345678',
+        ]));
+
+        $response->assertRedirect('/attendance');
+
+        $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
-            'password' => 'error',
-            'password_confirmation' => 'error',
-        ];
-
-        $response = $this->post('/register', $data);
-
-        $response->assertSessionHasErrors([
-            'password' => 'パスワードは8文字以上で入力してください',
         ]);
     }
 
     // パスワードが一致しない場合、バリデーションに失敗する
     public function test_password_confirmation_does_not_match_for_registration(): void
     {
-        $data = [
-            'name' => 'テスト 太郎',
-            'email' => 'test@example.com',
-            'password' => 'password',
+        $response = $this->post('/register', $this->validRegistrationData([
             'password_confirmation' => 'error_password',
-        ];
-
-        $response = $this->post('/register', $data);
+        ]));
 
         $response->assertSessionHasErrors([
             'password' => 'パスワードと一致しません',
@@ -97,32 +87,34 @@ class UserRegistrationTest extends TestCase
     // パスワードが未入力の場合、バリデーションに失敗する
     public function test_password_is_required_for_registration(): void
     {
-        $data = [
-            'name' => 'テスト 太郎',
-            'email' => 'test@example.com',
+        $response = $this->post('/register', $this->validRegistrationData([
             'password' => '',
             'password_confirmation' => '',
-        ];
-
-        $response = $this->post('/register', $data);
+        ]));
 
         $response->assertSessionHasErrors([
             'password' => 'パスワードを入力してください',
         ]);
     }
 
-    // 正しく内容が入力されていた場合、
-    // バリデーションに成功し、正常に登録される
+    // 既に登録されているメールアドレスでは登録できない
+    public function test_email_must_be_unique_for_registration(): void
+    {
+        User::factory()->create([
+            'email' => 'test@example.com',
+        ]);
+
+        $response = $this->post('/register', $this->validRegistrationData());
+
+        $response->assertSessionHasErrors('email');
+
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    // 正しく内容が入力されていた場合、正常に登録される
     public function test_user_can_register_with_valid_data(): void
     {
-        $data = [
-            'name' => 'テスト 太郎',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
-
-        $response = $this->post('/register', $data);
+        $response = $this->post('/register', $this->validRegistrationData());
 
         $response->assertRedirect('/attendance');
 
@@ -133,6 +125,52 @@ class UserRegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+    }
+
+    // 会員登録時にadmin_statusを送信しても一般ユーザーとして登録される
+    public function test_admin_status_cannot_be_set_through_registration(): void
+    {
+        $response = $this->post('/register', $this->validRegistrationData([
+            'admin_status' => true,
+        ]));
+
+        $response->assertRedirect('/attendance');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'test@example.com',
+            'admin_status' => false,
+        ]);
+    }
+
+    // 名前が255文字の場合、正常に登録できる
+    public function test_name_with_255_characters_can_register(): void
+    {
+        $name = str_repeat('a', 255);
+
+        $response = $this->post('/register', $this->validRegistrationData([
+            'name' => $name,
+        ]));
+
+        $response->assertRedirect('/attendance');
+
+        $this->assertDatabaseHas('users', [
+            'name' => $name,
+            'email' => 'test@example.com',
+        ]);
+    }
+
+    // 名前が256文字の場合、バリデーションに失敗する
+    public function test_name_with_256_characters_fails_registration(): void
+    {
+        $response = $this->post('/register', $this->validRegistrationData([
+            'name' => str_repeat('a', 256),
+        ]));
+
+        $response->assertSessionHasErrors('name');
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'test@example.com',
+        ]);
     }
 
     // 会員登録画面からログイン画面に遷移できる
@@ -146,5 +184,16 @@ class UserRegistrationTest extends TestCase
         $loginResponse = $this->get('/login');
 
         $loginResponse->assertStatus(200);
+    }
+
+    // 有効な登録データを保持する
+    private function validRegistrationData(array $overrides = []): array
+    {
+        return array_merge([
+            'name' => 'テスト 太郎',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ], $overrides);
     }
 }

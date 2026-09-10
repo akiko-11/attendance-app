@@ -29,6 +29,11 @@ class BreakTest extends TestCase
             'break_in' => '12:00:00',
             'break_out' => null,
         ]);
+
+        $pageResponse = $this->actingAs($user)->get('/attendance');
+
+        $pageResponse->assertStatus(200);
+        $pageResponse->assertSeeText('休憩中');
     }
 
     // 「休憩入」ボタンは1日に何回でも押下できる
@@ -81,6 +86,11 @@ class BreakTest extends TestCase
             'break_in' => '12:00:00',
             'break_out' => '13:00:00',
         ]);
+
+        $pageResponse = $this->actingAs($user)->get('/attendance');
+
+        $pageResponse->assertStatus(200);
+        $pageResponse->assertSeeText('出勤中');
     }
 
     // 「休憩戻」ボタンは1日に何回でも押下できる

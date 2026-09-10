@@ -28,7 +28,7 @@ class AttendanceCorrectionRequestDuplicateTest extends TestCase
         // その勤怠に承認待ちの申請を作成
         $application = $attendanceRecord->attendanceCorrectionRequests()->create([
             'user_id' => $user->id,
-            'new_date' => $attendanceRecord->date, // この行を追加
+            'new_date' => $attendanceRecord->date,
             'new_clock_in' => '09:00',
             'new_clock_out' => '18:00',
             'comment' => '打刻ミスのため',

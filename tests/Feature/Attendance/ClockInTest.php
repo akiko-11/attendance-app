@@ -40,7 +40,10 @@ class ClockInTest extends TestCase
             Carbon::parse($attendance->date)->toDateString()
         );
 
-        Carbon::setTestNow();
+        $pageResponse = $this->actingAs($user)->get('/attendance');
+
+        $pageResponse->assertStatus(200);
+        $pageResponse->assertSeeText('出勤中');
     }
 
     // 出勤は1日に1回だけ登録される
@@ -77,7 +80,12 @@ class ClockInTest extends TestCase
             'user_id' => $user->id,
             'clock_in' => '10:00:00',
         ]);
+    }
 
+    protected function tearDown(): void
+    {
         Carbon::setTestNow();
+
+        parent::tearDown();
     }
 }

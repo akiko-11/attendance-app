@@ -43,7 +43,35 @@ class AdminStaffListTest extends TestCase
         $response->assertSeeText($user2->email);
     }
 
-    // 一般ユーザーがアクセスした場合は403になる
+    // スタッフ一覧から選択したユーザーの勤怠一覧へ遷移できる
+    public function test_admin_can_navigate_from_staff_list_to_staff_attendance_list(): void
+    {
+        $admin = User::factory()->create([
+            'admin_status' => true,
+        ]);
+
+        $user = User::factory()->create([
+            'name' => '対象ユーザー',
+            'admin_status' => false,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get('/admin/staff/list');
+
+        $response->assertStatus(200);
+        $response->assertSee(
+            'href="'.url("/admin/attendance/staff/{$user->id}").'"',
+            false
+        );
+
+        $detailResponse = $this->actingAs($admin)
+            ->get("/admin/attendance/staff/{$user->id}");
+
+        $detailResponse->assertStatus(200);
+        $detailResponse->assertSeeText('対象ユーザー');
+    }
+
+    // 一般ユーザーがアクセスした場合は勤怠登録画面へリダイレクトされる
     public function test_general_user_cannot_access_admin_staff_list(): void
     {
         $user = User::factory()->create([

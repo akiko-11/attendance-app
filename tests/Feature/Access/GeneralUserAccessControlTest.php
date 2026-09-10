@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\Access;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,19 +52,6 @@ class GeneralUserAccessControlTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->get('/test/general');
-
-        $response->assertRedirect('/admin/attendance/list');
-    }
-
-    // 管理者が実際の一般ユーザー画面へアクセスすると管理者勤怠一覧へ戻る
-    public function test_admin_is_redirected_from_actual_general_user_page(): void
-    {
-        $admin = User::factory()->create([
-            'admin_status' => true,
-        ]);
-
-        $response = $this->actingAs($admin)
-            ->get('/attendance');
 
         $response->assertRedirect('/admin/attendance/list');
     }

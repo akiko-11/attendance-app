@@ -62,6 +62,27 @@ class AdminLoginTest extends TestCase
         ]);
     }
 
+    // 登録済み管理者でもパスワードが一致しない場合、ログインに失敗する
+    public function test_admin_login_fails_when_password_is_incorrect(): void
+    {
+        User::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
+            'admin_status' => true,
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'email' => 'admin@example.com',
+            'password' => 'wrong_password',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'email' => 'ログイン情報が登録されていません',
+        ]);
+
+        $this->assertGuest();
+    }
+
     // 一般ユーザーは管理者用ログインからログインできない
     public function test_general_user_cannot_login_from_admin_login(): void
     {

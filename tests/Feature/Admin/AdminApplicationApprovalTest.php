@@ -44,7 +44,7 @@ class AdminApplicationApprovalTest extends TestCase
         $application = AttendanceCorrectionRequest::create([
             'user_id' => $user->id,
             'attendance_record_id' => $userAttendanceRecord->id,
-            'new_date' => '2026-09-05',
+            'new_date' => '2026-09-04',
             'new_clock_in' => '09:10:00',
             'new_clock_out' => '18:10:00',
             'comment' => '打刻ミスのため',
@@ -71,9 +71,9 @@ class AdminApplicationApprovalTest extends TestCase
             'comment' => '打刻ミスのため',
         ]);
 
-        // 更新後の勤怠をDBから再取得し、日付を確認
+        // 更新後の勤怠をDBから再取得し、日付が維持されていることを確認
         $this->assertSame(
-            '2026-09-05',
+            '2026-09-04',
             $userAttendanceRecord->refresh()->date->toDateString()
         );
 
@@ -141,7 +141,7 @@ class AdminApplicationApprovalTest extends TestCase
         $application = AttendanceCorrectionRequest::create([
             'user_id' => $user->id,
             'attendance_record_id' => $userAttendanceRecord->id,
-            'new_date' => '2026-09-05',
+            'new_date' => '2026-09-04',
             'new_clock_in' => '09:10:00',
             'new_clock_out' => '18:10:00',
             'comment' => '打刻ミスのため',
