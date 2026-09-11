@@ -37,7 +37,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // ログイン済み一般ユーザー
-Route::middleware(['auth', 'general'])->group(function () {
+Route::middleware(['auth', 'general', 'verified'])->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index']);
     Route::post('/attendance', [AttendanceController::class, 'store']);
     Route::get('/attendance/list', [AttendanceController::class, 'list']);
