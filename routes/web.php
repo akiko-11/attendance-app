@@ -79,6 +79,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     ])->whereNumber('id');
     Route::get('/admin/staff/list', [AdminStaffController::class, 'index']);
     Route::get('/admin/attendance/staff/{id}', [AdminStaffAttendanceController::class, 'index']);
+    Route::post('/export', [
+        AdminStaffAttendanceController::class,
+        'export',
+    ]);
     Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [
         AdminApplicationApprovalController::class, 'show',
     ]);
