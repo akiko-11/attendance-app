@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminStaffController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceCorrectionRequestController;
 use App\Http\Controllers\AttendanceDetailController;
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
@@ -41,7 +42,7 @@ Route::middleware(['auth', 'general', 'verified'])->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index']);
     Route::post('/attendance', [AttendanceController::class, 'store']);
     Route::get('/attendance/list', [AttendanceController::class, 'list']);
-
+    Route::get('/attendance/report', [AttendanceReportController::class, 'index']);
     Route::get('/application/{id}', [
         AttendanceCorrectionRequestController::class, 'show',
     ])->whereNumber('id');
