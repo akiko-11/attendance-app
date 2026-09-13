@@ -12,61 +12,7 @@ class AttendanceCorrectionRequestSeeder extends Seeder
 {
     public function run(): void
     {
-        $user1 = User::where('email', 'user1@example.com')->firstOrFail();
         $user2 = User::where('email', 'user2@example.com')->firstOrFail();
-
-        $user1Requests = [
-            [
-                'date' => '2026-09-08',
-                'new_clock_in' => '09:10',
-                'new_clock_out' => '18:00',
-                'break_in' => '12:00',
-                'break_out' => '13:00',
-                'comment' => '出勤時間修正のため',
-                'approval_status' => false,
-                'created_at' => '2026-09-08 10:00:00',
-            ],
-            [
-                'date' => '2026-09-07',
-                'new_clock_in' => '08:50',
-                'new_clock_out' => '18:10',
-                'break_in' => '12:00',
-                'break_out' => '13:00',
-                'comment' => '退勤時間修正のため',
-                'approval_status' => true,
-                'created_at' => '2026-09-08 09:00:00',
-            ],
-            [
-                'date' => '2026-08-28',
-                'new_clock_in' => '09:10',
-                'new_clock_out' => '18:10',
-                'break_in' => '12:10',
-                'break_out' => '13:00',
-                'comment' => '休憩時間修正のため',
-                'approval_status' => false,
-                'created_at' => '2026-09-01 10:00:00',
-            ],
-            [
-                'date' => '2026-08-20',
-                'new_clock_in' => '08:50',
-                'new_clock_out' => '18:00',
-                'break_in' => '12:00',
-                'break_out' => '13:00',
-                'comment' => '出勤時間修正のため',
-                'approval_status' => true,
-                'created_at' => '2026-08-21 10:00:00',
-            ],
-            [
-                'date' => '2026-07-15',
-                'new_clock_in' => '09:00',
-                'new_clock_out' => '18:10',
-                'break_in' => '12:00',
-                'break_out' => '13:00',
-                'comment' => '退勤時間修正のため',
-                'approval_status' => false,
-                'created_at' => '2026-07-16 10:00:00',
-            ],
-        ];
 
         $user2Requests = [
             [
@@ -121,7 +67,6 @@ class AttendanceCorrectionRequestSeeder extends Seeder
             ],
         ];
 
-        $this->createRequests($user1, $user1Requests);
         $this->createRequests($user2, $user2Requests);
     }
 
