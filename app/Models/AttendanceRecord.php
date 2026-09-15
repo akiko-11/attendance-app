@@ -39,6 +39,12 @@ class AttendanceRecord extends Model
         return $this->hasMany(AttendanceCorrectionRequest::class);
     }
 
+    // APIレスポンス用
+    public function applications(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrectionRequest::class);
+    }
+
     // 休憩時間の合計を計算するメソッド
     public function getTotalBreakMinutes(): int
     {
