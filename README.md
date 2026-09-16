@@ -282,8 +282,10 @@ erDiagram
 
 ## ログイン情報
 
-| 権限 | メールアドレス | パスワード |
-| --- | --- | --- |
-| 一般ユーザー | user1@example.com | password |
-| 一般ユーザー | user2@example.com | password |
-| 管理者 | user3@example.com | password |
+以下は動作確認用のダミーユーザーです。
+
+| 権限 | メールアドレス | パスワード | メール認証 | admin_status |
+| --- | --- | --- | --- | --- |
+| 一般ユーザー | user1@example.com | password | 認証済み | false |
+| 一般ユーザー | user2@example.com | password | 認証済み | false |
+| 管理者 | user3@example.com | password | 認証済み | true |
