@@ -98,6 +98,63 @@ class AttendanceReportTest extends TestCase
         ]);
     }
 
+    // 月末でも過去6ヶ月が重複・欠落なく集計される
+    public function test_attendance_report_handles_end_of_month_correctly(): void
+    {
+        Carbon::setTestNow('2026-07-31 12:00:00');
+
+        $user = User::factory()->create([
+            'admin_status' => false,
+            'email_verified_at' => now(),
+        ]);
+
+        // 集計対象期間の最初の月
+        AttendanceRecord::factory()->create([
+            'user_id' => $user->id,
+            'date' => '2026-02-15',
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        // 集計期間外
+        AttendanceRecord::factory()->create([
+            'user_id' => $user->id,
+            'date' => '2026-01-31',
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/attendance/report');
+
+        $response->assertStatus(200);
+
+        // 2026-02〜2026-07の6ヶ月が重複・欠落なく取得される
+        $response->assertViewHas('monthlyTrend', function ($monthlyTrend) {
+            $months = collect($monthlyTrend)
+                ->pluck('month')
+                ->sort()
+                ->values()
+                ->all();
+
+            return $months === [
+                '2026-02',
+                '2026-03',
+                '2026-04',
+                '2026-05',
+                '2026-06',
+                '2026-07',
+            ];
+        });
+
+        // 1月分は集計対象外、2月分だけ集計される
+        $response->assertViewHas('summary', [
+            'total_work_minutes' => 540,
+            'total_overtime_minutes' => 60,
+            'avg_work_minutes' => 540,
+        ]);
+    }
+
     // 勤怠記録がないユーザーでもレポートを表示できる
     public function test_user_without_attendance_records_can_view_report_safely(): void
     {
@@ -128,9 +185,7 @@ class AttendanceReportTest extends TestCase
     {
         parent::setUp();
 
-        Carbon::setTestNow(
-            Carbon::create(2026, 9, 13, 12, 0, 0)
-        );
+        Carbon::setTestNow('2026-09-13 12:00:00');
     }
 
     protected function tearDown(): void
