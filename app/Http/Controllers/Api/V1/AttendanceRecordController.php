@@ -51,7 +51,6 @@ class AttendanceRecordController extends Controller
     ): AttendanceRecordResource {
         $attendanceRecord->load([
             'user',
-            'breaks',
             'applications',
         ]);
 

@@ -48,7 +48,11 @@ class AttendanceRecord extends Model
     // 休憩時間の合計を計算するメソッド
     public function getTotalBreakMinutes(): int
     {
-        return $this->breaks->sum(function ($break) {
+        $breaks = $this->relationLoaded('breaks')
+            ? $this->breaks
+            : $this->breaks()->get();
+
+        return $breaks->sum(function ($break) {
 
             // 休憩戻り時刻が未登録の場合、計算しない
             if ($break->break_out === null) {
@@ -58,7 +62,6 @@ class AttendanceRecord extends Model
             // 休憩時間 = 休憩戻り時刻 - 休憩入り時刻
             return Carbon::parse($break->break_in)
                 ->diffInMinutes(Carbon::parse($break->break_out));
-
         });
     }
 

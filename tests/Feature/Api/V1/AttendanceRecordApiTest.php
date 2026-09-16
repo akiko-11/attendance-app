@@ -61,6 +61,8 @@ class AttendanceRecordApiTest extends TestCase
         $response->assertJsonPath('meta.current_page', 1);
         $response->assertJsonPath('meta.per_page', 20);
         $response->assertJsonPath('meta.total', 3);
+
+        $response->assertJsonMissingPath('data.0.applications');
     }
 
     // 指定した勤怠詳細をJSONで取得できる
@@ -126,7 +128,7 @@ class AttendanceRecordApiTest extends TestCase
             '詳細確認テスト'
         );
 
-        $response->assertJsonCount(1, 'data.breaks');
+        $response->assertJsonMissingPath('data.breaks');
         $response->assertJsonCount(1, 'data.applications');
 
         $response->assertJsonStructure([
@@ -143,13 +145,6 @@ class AttendanceRecordApiTest extends TestCase
                 'total_time',
                 'total_break_time',
                 'comment',
-                'breaks' => [
-                    '*' => [
-                        'id',
-                        'break_in',
-                        'break_out',
-                    ],
-                ],
                 'applications',
             ],
         ]);
