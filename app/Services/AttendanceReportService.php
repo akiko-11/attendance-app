@@ -11,7 +11,7 @@ class AttendanceReportService
         $now = now();
 
         // 今月を含む過去6ヶ月
-        $startDate = $now->copy()->subMonths(5)->startOfMonth();
+        $startDate = $now->copy()->startOfMonth()->subMonths(5);
         $endDate = $now->copy()->endOfMonth();
 
         // ログインユーザーの過去6ヶ月の勤怠を取得
@@ -58,7 +58,7 @@ class AttendanceReportService
 
         for ($i = 5; $i >= 0; $i--) {
             // 今月を含む過去6か月分の年月を生成
-            $month = $now->copy()->subMonths($i);
+            $month = $now->copy()->startOfMonth()->subMonths($i);
             $monthKey = $month->format('Y-m');
 
             $monthlyWorkMinutes = 0;

@@ -36,7 +36,7 @@ class AttendanceSeeder extends Seeder
         // 各月の平日15日について、
         // 09:00〜18:00 / 休憩12:00〜13:00 の通常勤務を作成
         for ($i = 5; $i >= 1; $i--) {
-            $month = $now->copy()->subMonths($i);
+            $month = $now->copy()->startOfMonth()->subMonths($i);
 
             $period = CarbonPeriod::create(
                 $month->copy()->startOfMonth(),
