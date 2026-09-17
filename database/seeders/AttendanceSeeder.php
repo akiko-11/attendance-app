@@ -152,10 +152,10 @@ class AttendanceSeeder extends Seeder
     {
         $dates = [];
 
-        // 2026年7月1日〜9月8日の平日を作成
+        // 2026年7月1日〜実行日前日までのデータ作成
         $period = CarbonPeriod::create(
             Carbon::create(2026, 7, 1),
-            Carbon::create(2026, 9, 8)
+            today()->subDay()
         );
 
         foreach ($period as $date) {
