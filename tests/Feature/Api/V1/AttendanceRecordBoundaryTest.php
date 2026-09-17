@@ -41,6 +41,10 @@ class AttendanceRecordBoundaryTest extends TestCase
         $response->assertJsonValidationErrors([
             'per_page',
         ]);
+        $response->assertJsonPath(
+            'errors.per_page.0',
+            '1ページあたりの件数は100以下で指定してください。'
+        );
     }
 
     // date の形式が不正な場合422が返る
@@ -54,6 +58,10 @@ class AttendanceRecordBoundaryTest extends TestCase
         $response->assertJsonValidationErrors([
             'date',
         ]);
+        $response->assertJsonPath(
+            'errors.date.0',
+            '日付は YYYY-MM-DD 形式で指定してください。'
+        );
     }
 
     // month の形式が不正な場合422が返る
@@ -67,5 +75,9 @@ class AttendanceRecordBoundaryTest extends TestCase
         $response->assertJsonValidationErrors([
             'month',
         ]);
+        $response->assertJsonPath(
+            'errors.month.0',
+            '年月は YYYY-MM 形式で指定してください。'
+        );
     }
 }
