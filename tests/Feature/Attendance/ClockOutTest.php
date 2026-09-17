@@ -94,6 +94,41 @@ class ClockOutTest extends TestCase
         ]);
     }
 
+    // 休憩中に「退勤」ボタンは押下できない
+    public function test_user_cannot_clock_out_while_on_break(): void
+    {
+        $user = User::factory()->create();
+
+        $attendanceRecord = AttendanceRecord::factory()
+            ->for($user)
+            ->create([
+                'date' => today()->toDateString(),
+                'clock_in' => '09:00:00',
+                'clock_out' => null,
+            ]);
+
+        $attendanceRecord->breaks()->create([
+            'break_in' => '12:00:00',
+            'break_out' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->post('/attendance', [
+                'action' => 'clock_out',
+            ]);
+
+        $this->assertDatabaseHas('attendance_records', [
+            'id' => $attendanceRecord->id,
+            'clock_out' => null,
+        ]);
+
+        $this->assertDatabaseHas('attendance_breaks', [
+            'attendance_record_id' => $attendanceRecord->id,
+            'break_in' => '12:00:00',
+            'break_out' => null,
+        ]);
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();

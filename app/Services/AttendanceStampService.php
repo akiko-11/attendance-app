@@ -68,20 +68,26 @@ class AttendanceStampService
         // 今日の勤怠を取得
         $attendance = $this->getTodayAttendance($user);
 
-        // 未終了の最新休憩レコードを取得
-        if ($attendance) {
-            $break = $attendance->breaks()
-                ->whereNull('break_out')
-                ->latest()
-                ->first();
-
-            // 休憩戻時刻を更新
-            if ($break) {
-                $break->update([
-                    'break_out' => now()->format('H:i:s'),
-                ]);
-            }
+        // 出勤していない、または退勤済みの場合
+        if (! $attendance || $attendance->clock_out !== null) {
+            return;
         }
+
+        // 未終了の最新休憩レコードを取得
+        $break = $attendance->breaks()
+            ->whereNull('break_out')
+            ->latest()
+            ->first();
+
+        // 未終了の休憩がない場合
+        if (! $break) {
+            return;
+        }
+
+        // 休憩戻時刻を更新
+        $break->update([
+            'break_out' => now()->format('H:i:s'),
+        ]);
     }
 
     // 退勤処理
@@ -90,12 +96,19 @@ class AttendanceStampService
         // 今日の勤怠を取得
         $attendance = $this->getTodayAttendance($user);
 
-        // 未退勤の場合、退勤時刻を更新
-        if ($attendance && $attendance->clock_out === null) {
-            $attendance->update([
-                'clock_out' => now()->format('H:i:s'),
-            ]);
+        // 出勤していない、または退勤済みの場合
+        if (! $attendance || $attendance->clock_out !== null) {
+            return;
         }
+
+        // 休憩中の場合
+        if ($attendance->breaks()->whereNull('break_out')->exists()) {
+            return;
+        }
+
+        $attendance->update([
+            'clock_out' => now()->format('H:i:s'),
+        ]);
     }
 
     // 今日の勤怠を取得
