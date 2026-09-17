@@ -21,30 +21,28 @@ class AttendanceReportService
             ->orderBy('date')
             ->get();
 
-        // 退勤済みの勤怠のみ取得
-        $completedAttendanceRecords = $attendanceRecords->filter(
-            fn ($attendanceRecord) => $attendanceRecord->clock_out !== null
-        );
+        // 退勤済みの勤怠について、集計に使用する値をあらかじめ算出
+        $completedAttendanceRecords = $attendanceRecords
+            ->filter(
+                fn ($attendanceRecord) => $attendanceRecord->clock_out !== null
+            )
+            ->map(function ($attendanceRecord) {
+                return [
+                    'record' => $attendanceRecord,
+                    'month' => $attendanceRecord->date->format('Y-m'),
+                    'work_minutes' => $attendanceRecord->getTotalWorkMinutes(),
+                ];
+            });
 
-        $currentMonth = $now->format('Y-m');
+        // 総労働時間
+        $totalWorkMinutes = $completedAttendanceRecords
+            ->sum('work_minutes');
 
-        // 今月の勤怠のみ取得
-        $currentMonthRecords = $attendanceRecords->filter(
-            fn ($attendanceRecord) => $attendanceRecord->date->format('Y-m') === $currentMonth
-        );
-
-        $totalWorkMinutes = 0;
-        $totalOvertimeMinutes = 0;
-
-        foreach ($completedAttendanceRecords as $attendanceRecord) {
-            $workMinutes = $attendanceRecord->getTotalWorkMinutes();
-
-            // 総労働時間
-            $totalWorkMinutes += $workMinutes;
-
-            // 1日8時間を超えた分を残業時間として加算
-            $totalOvertimeMinutes += max($workMinutes - 480, 0);
-        }
+        // 総残業時間
+        $totalOvertimeMinutes = $completedAttendanceRecords
+            ->sum(
+                fn ($item) => max($item['work_minutes'] - 480, 0)
+            );
 
         $workDayCount = $completedAttendanceRecords->count();
 
@@ -53,67 +51,73 @@ class AttendanceReportService
             ? intdiv($totalWorkMinutes, $workDayCount)
             : 0;
 
-        // 以下、月次推移の処理
-        $monthlyTrend = [];
+        // 月ごとに退勤済み勤怠を分類
+        $completedRecordsByMonth = $completedAttendanceRecords
+            ->groupBy('month');
 
-        for ($i = 5; $i >= 0; $i--) {
-            // 今月を含む過去6か月分の年月を生成
-            $month = $now->copy()->startOfMonth()->subMonths($i);
-            $monthKey = $month->format('Y-m');
+        // 今月を含む過去6ヶ月の月次推移
+        $monthlyTrend = collect(range(5, 0))
+            ->map(function ($i) use ($now, $completedRecordsByMonth) {
+                $month = $now->copy()
+                    ->startOfMonth()
+                    ->subMonths($i);
 
-            $monthlyWorkMinutes = 0;
-            $monthlyOvertimeMinutes = 0;
+                $monthKey = $month->format('Y-m');
 
-            // 該当月の退勤済み勤怠のみ取得
-            $monthlyRecords = $completedAttendanceRecords->filter(
-                fn ($attendanceRecord) => $attendanceRecord->date->format('Y-m') === $monthKey
+                $monthlyRecords = $completedRecordsByMonth
+                    ->get($monthKey, collect());
+
+                return [
+                    'month' => $monthKey,
+                    'work_minutes' => $monthlyRecords
+                        ->sum('work_minutes'),
+                    'overtime_minutes' => $monthlyRecords
+                        ->sum(
+                            fn ($item) => max(
+                                $item['work_minutes'] - 480,
+                                0
+                            )
+                        ),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $currentMonth = $now->format('Y-m');
+
+        // 今月の勤怠のみ取得
+        $currentMonthRecords = $attendanceRecords->filter(
+            fn ($attendanceRecord) => $attendanceRecord->date
+                ->format('Y-m') === $currentMonth
+        );
+
+        // 09:00より後の出勤は遅刻
+        $lateCount = $currentMonthRecords
+            ->filter(
+                fn ($attendanceRecord) => $attendanceRecord->clock_in > '09:00:00'
+            )
+            ->count();
+
+        // 退勤済みの今月勤怠
+        $completedCurrentMonthRecords = $currentMonthRecords
+            ->filter(
+                fn ($attendanceRecord) => $attendanceRecord->clock_out !== null
             );
 
-            foreach ($monthlyRecords as $attendanceRecord) {
-                $workMinutes = $attendanceRecord->getTotalWorkMinutes();
+        // 18:00より前の退勤は早退
+        $earlyLeaveCount = $completedCurrentMonthRecords
+            ->filter(
+                fn ($attendanceRecord) => $attendanceRecord->clock_out < '18:00:00'
+            )
+            ->count();
 
-                $monthlyWorkMinutes += $workMinutes;
-
-                // 該当月の各日の残業時間を加算
-                $monthlyOvertimeMinutes += max($workMinutes - 480, 0);
-            }
-
-            $monthlyTrend[] = [
-                'month' => $monthKey,
-                'work_minutes' => $monthlyWorkMinutes,
-                'overtime_minutes' => $monthlyOvertimeMinutes,
-            ];
-        }
-
-        // 以下、今月の異常検知処理
-
-        $lateCount = 0;
-        $earlyLeaveCount = 0;
-        $longWorkCount = 0;
-
-        foreach ($currentMonthRecords as $attendanceRecord) {
-            // 09:00より後の出勤は遅刻
-            if ($attendanceRecord->clock_in > '09:00:00') {
-                $lateCount++;
-            }
-
-            // 未退勤の場合、早退・長時間労働は判定しない
-            if ($attendanceRecord->clock_out === null) {
-                continue;
-            }
-
-            // 18:00より前の退勤は早退
-            if ($attendanceRecord->clock_out < '18:00:00') {
-                $earlyLeaveCount++;
-            }
-
-            $workMinutes = $attendanceRecord->getTotalWorkMinutes();
-
-            // 実労働時間が10時間を超えた場合
-            if ($workMinutes > 600) {
-                $longWorkCount++;
-            }
-        }
+        // 実労働時間が10時間を超えた勤怠
+        $longWorkCount = $completedCurrentMonthRecords
+            ->filter(
+                fn ($attendanceRecord) => $attendanceRecord
+                    ->getTotalWorkMinutes() > 600
+            )
+            ->count();
 
         return [
             'summary' => [
