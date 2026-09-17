@@ -58,4 +58,78 @@ class AttendanceRecordUpdateValidationTest extends TestCase
             $target->date->format('Y-m-d')
         );
     }
+
+    // clock_in のみを更新して既存の clock_out より後になる場合は422になる
+    public function test_returns_422_when_patch_clock_in_is_after_existing_clock_out(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $attendanceRecord = AttendanceRecord::factory()
+            ->for($user)
+            ->create([
+                'date' => '2026-09-01',
+                'clock_in' => '09:00:00',
+                'clock_out' => '18:00:00',
+                'comment' => '元の勤怠',
+            ]);
+
+        $response = $this->patchJson(
+            "/api/v1/attendance-records/{$attendanceRecord->id}",
+            [
+                'clock_in' => '19:00:00',
+            ]
+        );
+
+        $response->assertStatus(422);
+
+        $response->assertJsonPath(
+            'errors.clock_out.0',
+            '退勤時刻は出勤時刻より後の時刻を指定してください。'
+        );
+
+        $this->assertDatabaseHas('attendance_records', [
+            'id' => $attendanceRecord->id,
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+    }
+
+    // clock_out のみを更新して既存の clock_in より前になる場合は422になる
+    public function test_returns_422_when_patch_clock_out_is_before_existing_clock_in(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $attendanceRecord = AttendanceRecord::factory()
+            ->for($user)
+            ->create([
+                'date' => '2026-09-01',
+                'clock_in' => '09:00:00',
+                'clock_out' => '18:00:00',
+                'comment' => '元の勤怠',
+            ]);
+
+        $response = $this->patchJson(
+            "/api/v1/attendance-records/{$attendanceRecord->id}",
+            [
+                'clock_out' => '08:00:00',
+            ]
+        );
+
+        $response->assertStatus(422);
+
+        $response->assertJsonPath(
+            'errors.clock_out.0',
+            '退勤時刻は出勤時刻より後の時刻を指定してください。'
+        );
+
+        $this->assertDatabaseHas('attendance_records', [
+            'id' => $attendanceRecord->id,
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+    }
 }
