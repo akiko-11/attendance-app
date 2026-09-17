@@ -279,6 +279,17 @@ erDiagram
 
 上記の外部キーには ON DELETE CASCADE を設定しています。
 
+### 補助テーブルについて
+
+ER図およびテーブル仕様書では、アプリケーションで使用する業務テーブルを記載しています。
+
+このほか、Laravel / Sanctum が使用する以下の補助テーブルが存在します。
+
+- `password_reset_tokens`
+- `failed_jobs`
+- `personal_access_tokens`
+
+これらはフレームワーク・認証機能用のテーブルのため、ER図には記載していません。
 
 ## ログイン情報
 
