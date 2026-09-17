@@ -50,6 +50,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(AttendanceRecord::class);
     }
 
+    /**
+     * 本日の勤怠状況を取得する。
+     *
+     * @return string 勤務外・出勤中・休憩中・退勤済のいずれか
+     */
     public function getAttendanceStatusAttribute(): string
     {
         $attendance = $this->attendanceRecords()

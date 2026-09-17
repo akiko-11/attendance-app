@@ -8,7 +8,13 @@ use Illuminate\View\View;
 
 class AdminApplicationApprovalController extends Controller
 {
-    // 修正申請の詳細画面を表示
+    /**
+     * 指定された勤怠修正申請の詳細を取得して表示する。
+     *
+     * @param  AdminApplicationApprovalService  $adminApplicationApprovalService  修正申請の詳細を取得するサービス
+     * @param  int  $attendance_correct_request_id  修正申請ID
+     * @return View 修正申請の詳細画面
+     */
     public function show(
         AdminApplicationApprovalService $adminApplicationApprovalService,
         int $attendance_correct_request_id
@@ -20,7 +26,13 @@ class AdminApplicationApprovalController extends Controller
         return view('admin.admin-application-detail', $data);
     }
 
-    // 修正申請を承認
+    /**
+     * 指定された勤怠修正申請を承認する。
+     *
+     * @param  AdminApplicationApprovalService  $adminApplicationApprovalService  修正申請の承認処理を行うサービス
+     * @param  int  $attendance_correct_request_id  修正申請ID
+     * @return RedirectResponse 承認後の修正申請詳細画面へのリダイレクト
+     */
     public function approve(
         AdminApplicationApprovalService $adminApplicationApprovalService,
         int $attendance_correct_request_id

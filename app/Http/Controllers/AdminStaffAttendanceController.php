@@ -10,6 +10,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminStaffAttendanceController extends Controller
 {
+    /**
+     * 指定されたスタッフの月次勤怠一覧を取得して表示する。
+     *
+     * @param  Request  $request  表示対象月の情報を含むリクエスト
+     * @param  int  $id  スタッフのユーザーID
+     * @param  AdminStaffAttendanceListService  $adminStaffAttendanceListService  スタッフの勤怠一覧を取得するサービス
+     * @return View スタッフ別勤怠一覧画面
+     */
     public function index(
         Request $request,
         int $id,
@@ -23,7 +31,13 @@ class AdminStaffAttendanceController extends Controller
         return view('admin.staff-attendance-list', $data);
     }
 
-    // CSV出力
+    /**
+     * 指定されたスタッフの月次勤怠情報をCSV形式で出力する。
+     *
+     * @param  ExportAttendanceRequest  $request  CSV出力条件を含むリクエスト
+     * @param  AdminStaffAttendanceListService  $adminStaffAttendanceListService  スタッフの勤怠一覧を取得するサービス
+     * @return StreamedResponse 勤怠情報のCSVダウンロードレスポンス
+     */
     public function export(
         ExportAttendanceRequest $request,
         AdminStaffAttendanceListService $adminStaffAttendanceListService

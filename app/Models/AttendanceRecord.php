@@ -45,7 +45,11 @@ class AttendanceRecord extends Model
         return $this->hasMany(AttendanceCorrectionRequest::class);
     }
 
-    // 休憩時間の合計を計算するメソッド
+    /**
+     * 登録されている休憩時間の合計を分単位で取得する。
+     *
+     * @return int 合計休憩時間（分）
+     */
     public function getTotalBreakMinutes(): int
     {
         $breaks = $this->relationLoaded('breaks')
@@ -65,7 +69,11 @@ class AttendanceRecord extends Model
         });
     }
 
-    // 勤務時間の合計を計算するメソッド
+    /**
+     * 出勤から退勤までの時間から休憩時間を差し引いた勤務時間を分単位で取得する。
+     *
+     * @return int 合計勤務時間（分）
+     */
     public function getTotalWorkMinutes(): int
     {
         // 退勤時刻が未登録の場合、計算しない
