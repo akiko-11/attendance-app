@@ -54,7 +54,11 @@ class UpdateAttendanceRecordRequest extends FormRequest
         ];
     }
 
-    // 通常のバリデーション終了後に追加チェック
+    /**
+     * 更新後の出勤・退勤時刻の整合性を追加検証する。
+     *
+     * @param  Validator  $validator  バリデーション処理を行うValidator
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {

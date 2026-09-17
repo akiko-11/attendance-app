@@ -13,7 +13,13 @@ use Illuminate\View\View;
 
 class AttendanceCorrectionRequestController extends Controller
 {
-    // 申請一覧画面
+    /**
+     * 認証ユーザーの権限に応じた修正申請一覧を表示する。
+     *
+     * @param  ApplicationListService  $applicationListService  一般ユーザーの申請一覧を取得するサービス
+     * @param  AdminApplicationListService  $adminApplicationListService  管理者用の申請一覧を取得するサービス
+     * @return View 修正申請一覧画面
+     */
     public function index(
         ApplicationListService $applicationListService,
         AdminApplicationListService $adminApplicationListService
@@ -36,7 +42,12 @@ class AttendanceCorrectionRequestController extends Controller
         ]);
     }
 
-    // 申請一覧から対象の勤怠詳細へ遷移
+    /**
+     * 指定された修正申請に紐づく勤怠詳細画面へ遷移する。
+     *
+     * @param  int  $id  修正申請ID
+     * @return RedirectResponse 勤怠詳細画面へのリダイレクト
+     */
     public function show(int $id): RedirectResponse
     {
         $user = Auth::user();
@@ -51,7 +62,15 @@ class AttendanceCorrectionRequestController extends Controller
         );
     }
 
-    // 勤怠修正を処理
+    /**
+     * 勤怠修正を処理し、ユーザー権限に応じて修正または申請を保存する。
+     *
+     * @param  AttendanceCorrectionFormRequest  $request  勤怠修正内容のリクエスト
+     * @param  AttendanceCorrectionRequestService  $attendanceCorrectionRequestService  修正申請を保存するサービス
+     * @param  AdminAttendanceUpdateService  $adminAttendanceUpdateService  管理者による勤怠修正を行うサービス
+     * @param  int  $id  勤怠情報ID
+     * @return RedirectResponse 処理後の勤怠詳細画面へのリダイレクト
+     */
     public function store(
         AttendanceCorrectionFormRequest $request,
         AttendanceCorrectionRequestService $attendanceCorrectionRequestService,
